@@ -1,11 +1,12 @@
 <resources>
     <string name="app_name">My Application</string>
-    <string name="button_false">نادرست</string>
-    <string name="button_true">درست</string>
+    <string name="button_false">false</string>
+    <string name="button_true">true</string>
     <string name="button_previous">قبلي</string>
     <string name="button_next">بعدي</string>
-    <string name="toast_correct">جواب شما صحيح است.</string>
-    <string name="toast_incorrect">متاسفانه جواب صحيحي نيست</string>
+    <string name="toast_correct">your answer is correct</string>
+    <string name="toast_incorrect">your answer is incorrect!!!</string>
+    <string name="toast_disable_cheating">cheating is disable for this question</string>
 
     <string name="question_australia">استرالیا بزرگ ترین قاره جهان است.</string>
     <string name="question_oceans">اقیانوس آرام بزرگ ترین اقیانوس جهان است.</string>
@@ -13,8 +14,10 @@
     <string name="question_africa">مصر در قاره آفریقا قرار دارد.</string>
     <string name="question_americas">کشور آمریکا پرجمعیت ترین کشور دنیا است.</string>
     <string name="question_asia">قاره آسیا در نیم کره جنوبی جهان واقع شده است.</string>
-    <string name="textView_score">امتياز :6/</string>
     <string name="text_zero">0</string>
-    <string name="button_cheat">تقلب</string>
+    <string name="button_cheat">cheating</string>
     <string name="question_size_text">question text size</string>
+    <string name="show_cheat">Show Cheat</string>
+    <string name="button_default">Default</string>
+    <string name="button_build">Build</string>
 </resources>

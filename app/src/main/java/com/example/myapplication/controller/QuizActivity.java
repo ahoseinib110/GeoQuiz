@@ -3,6 +3,7 @@ package com.example.myapplication.controller;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,12 +20,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.myapplication.R;
 import com.example.myapplication.model.Colors;
 import com.example.myapplication.model.Question;
+import com.example.myapplication.model.Quiz;
 import com.example.myapplication.model.Setting;
+import com.example.myapplication.utils.StringUtils;
 
 import java.util.ArrayList;
 
 public class QuizActivity extends AppCompatActivity {
-    public static final String LOG = "loooog";
+    public static final String LOG = "geoLog";
     private Button mButtonTrue;
     private Button mButtonFalse;
     private Button mButtonCheat;
@@ -38,6 +42,7 @@ public class QuizActivity extends AppCompatActivity {
     private TextView mTextViewScore2;
     private TextView mTextViewScoreText;
     private TextView mTextViewScoreText2;
+    private TextView mTextViewTimer;
     private LinearLayout mLayoutQuestion;
     private LinearLayout mLayoutScore;
     private LinearLayout mLayoutScore2;
@@ -50,11 +55,19 @@ public class QuizActivity extends AppCompatActivity {
     public static final String KEY_SCORE = "score";
     public static final String KEY_ANSWERED_ARRAY = "answeredArray";
     public static final String KEY_SETTING = "setting";
+    public static final String KEY_CHEAT_ANSWER = "cheatAnswer";
+    public static final String KEY_CHEAT_Question = "cheatQuestion";
+    private static final String KEY_TIME_OUT = "timeOut" ;
 
     public static final int REQUEST_CODE_SETTING = 0;
+    public static final int REQUEST_CODE_CHEAT = 1;
 
     private Question[] mQuestionBank;
+    private Quiz mQuiz;
     private Setting mSetting;
+    private int mTimeOut;
+    private boolean mIsFinished;
+
     /*= {
     new Question(R.string.question_australia, false),
     new Question(R.string.question_oceans, true),
@@ -64,15 +77,18 @@ public class QuizActivity extends AppCompatActivity {
     new Question(R.string.question_asia, false)
 };
 */
-    boolean[] answeredArray ;
+    boolean[] answeredArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Intent intent = getIntent();
         String attributes = intent.getStringExtra(QuizBuilderActivity.QUIZ_ATTRIBUTES);
-        Log.d("Taaaaaaag", attributes);
-        mQuestionBank = parseQuestions(attributes);
+        Log.d(LOG, attributes);
+        mQuiz = StringUtils.parseQuestions(attributes);
+        mQuestionBank = mQuiz.getmQuestions();
+        mTimeOut = mQuiz.getmTimeOut();
+
         answeredArray = new boolean[mQuestionBank.length];
         //inflate: convert layout xml to actual java objects to be displayed
         setContentView(R.layout.activity_quiz);
@@ -86,80 +102,41 @@ public class QuizActivity extends AppCompatActivity {
             for (int i = 0; i < answeredArray.length; i++) {
                 mQuestionBank[i].setmAnswered(answeredArray[i]);
             }
+            mIsFinished = savedInstanceState.getBoolean(KEY_TIME_OUT);
         }
         //it must be the first task we do after inflate
         findAllViews();
         setClickListeners();
-        String scoreText = "امتياز :" + mQuestionBank.length + "/";
+        String scoreText = "/" + mQuestionBank.length + " : score";
         mTextViewScoreText.setText(scoreText);
         mTextViewScoreText2.setText(scoreText);
-
         updateQuestion();
         updateScore();
         updateEnable();
+        mIsFinished = false;
         updateVisibility();
+        startTimer(mTimeOut);
     }
 
-
-
-    private Question[] parseQuestions(String attributes) {
-        String timeOut = attributes.substring(attributes.lastIndexOf("{") + 1, attributes.lastIndexOf("}"));
-        String questionsAttributes = attributes.substring(0, attributes.lastIndexOf("{"));
-
-        ArrayList<Question> questions = new ArrayList<>();
-        Question[] questionsArray;
-        int indexBraketOpen = -1;
-        int indexBraketClose = -1;
-
-        while (true) {
-            indexBraketOpen = questionsAttributes.indexOf("[", indexBraketOpen+1);
-            indexBraketClose = questionsAttributes.indexOf("]", indexBraketClose+1);
-            if (indexBraketOpen == -1) {
-                break;
-            }
-            String questionAtt = questionsAttributes.substring(indexBraketOpen + 1, indexBraketClose);
-            Question question;
-            String questionText="";
-            boolean questionAnswer=false, questionIsCheat=false;
-            String colorStr="";
-            Colors color;
-            int indexBracerOpen =-1;
-            int indexBracerClose =-1;
-            int attributeIndex;
-
-            for (int i = 0; i < 4; i++) {
-                indexBracerOpen = questionAtt.indexOf("{", indexBracerOpen+1);
-                indexBracerClose = questionAtt.indexOf("}", indexBracerClose+1);
-                switch (i) {
-                    case 0:
-                        questionText = questionAtt.substring(indexBracerOpen + 1, indexBracerClose);
-                        break;
-                    case 1:
-                        questionAnswer = Boolean.parseBoolean(questionAtt.substring(indexBracerOpen + 1, indexBracerClose));
-                        break;
-                    case 2:
-                        questionIsCheat = Boolean.parseBoolean(questionAtt.substring(indexBracerOpen + 1, indexBracerClose));
-                        break;
-                    case 3:
-                        colorStr = questionAtt.substring(indexBracerOpen + 1, indexBracerClose);
-                        break;
-                    default:
-                        break;
+    private void startTimer(int interval) {
+        new CountDownTimer(interval * 1000, 1000) {
+            public void onTick(long millisUntilFinished) {
+                if(!mIsFinished){
+                        mTextViewTimer.setText(String.valueOf(millisUntilFinished / 1000));
                 }
             }
 
-            color = Colors.valueOf(colorStr.toUpperCase());
-            question= new Question(questionText,questionAnswer,questionIsCheat,color);
-            questions.add(question);
-
-        }
-        questionsArray = new Question[questions.size()];
-        for (int i = 0; i <questions.size() ; i++) {
-            questionsArray[i] = questions.get(i);
-        }
-        //questionsArray = (Question[]) questions.toArray();
-        return questionsArray;
+            public void onFinish() {
+                //mTextField.setText("done!");
+                if(!mIsFinished) {
+                    mIsFinished = true;
+                    updateVisibility();
+                    Toast.makeText(QuizActivity.this, "Your time is up", Toast.LENGTH_LONG).show();
+                }
+            }
+        }.start();
     }
+
 
     /*
         public static void main(String[] args) {
@@ -181,6 +158,7 @@ public class QuizActivity extends AppCompatActivity {
     */
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
+        mIsFinished = true;
         super.onSaveInstanceState(outState);
         for (int i = 0; i < answeredArray.length; i++) {
             answeredArray[i] = mQuestionBank[i].ismAnswered();
@@ -189,24 +167,36 @@ public class QuizActivity extends AppCompatActivity {
         outState.putInt(KEY_ANSWERED_NUMBER, mAnsweredNumber);
         outState.putInt(KEY_SCORE, mScore);
         outState.putBooleanArray(KEY_ANSWERED_ARRAY, answeredArray);
+        outState.putBoolean(KEY_TIME_OUT,mIsFinished);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode!=RESULT_OK || data ==null){
+        if (resultCode != RESULT_OK || data == null) {
             return;
         }
-
-        if(requestCode==REQUEST_CODE_SETTING){
-            mSetting =(Setting) data.getSerializableExtra(KEY_SETTING);
-            updateSetting();
-            Log.d(LOG, String.valueOf(mTextViewQuestion.getTextSize()));
+        switch (requestCode) {
+            case REQUEST_CODE_SETTING:
+                mSetting = (Setting) data.getSerializableExtra(KEY_SETTING);
+                updateSetting();
+                //Log.d(LOG, String.valueOf(mTextViewQuestion.getTextSize()));
+                break;
+            case REQUEST_CODE_CHEAT:
+                mAnsweredNumber++;
+                answeredArray[mCurrentIndex] = true;
+                mQuestionBank[mCurrentIndex].setmAnswered(answeredArray[mCurrentIndex]);
+                updateEnable();
+                break;
+            default:
+                break;
         }
+
     }
 
     @Override
-    public void onBackPressed() { }
+    public void onBackPressed() {
+    }
 
     //always used mandatory
     private void findAllViews() {
@@ -224,6 +214,7 @@ public class QuizActivity extends AppCompatActivity {
         mTextViewScore2 = findViewById(R.id.text_view_score2);
         mTextViewScoreText = findViewById(R.id.text_view_score_text);
         mTextViewScoreText2 = findViewById(R.id.text_view_score_text2);
+        mTextViewTimer = findViewById(R.id.text_view_timer);
         mLayoutQuestion = findViewById(R.id.layout_question);
         mLayoutScore = findViewById(R.id.layout_score);
         mLayoutScore2 = findViewById(R.id.layout_score2);
@@ -233,7 +224,7 @@ public class QuizActivity extends AppCompatActivity {
     private void updateQuestion() {
         Question currentQuestion = mQuestionBank[mCurrentIndex];
         mTextViewQuestion.setText(currentQuestion.getmText());
-        switch (currentQuestion.getmColor()){
+        switch (currentQuestion.getmColor()) {
             case BLACK:
                 mTextViewQuestion.setTextColor(Color.BLACK);
                 break;
@@ -246,7 +237,11 @@ public class QuizActivity extends AppCompatActivity {
             case GREEN:
                 mTextViewQuestion.setTextColor(Color.GREEN);
                 break;
-            default:break;
+            default:
+                break;
+        }
+        if(mAnsweredNumber == mQuestionBank.length){
+            mIsFinished = true;
         }
     }
 
@@ -261,7 +256,7 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private void updateVisibility() {
-        if (mAnsweredNumber == mQuestionBank.length) {
+        if (mIsFinished) {
             mLayoutQuestion.setVisibility(View.GONE);
             mImageButtonLast.setVisibility(View.GONE);
             mImageButtonFirst.setVisibility(View.GONE);
@@ -269,6 +264,7 @@ public class QuizActivity extends AppCompatActivity {
             mImageButtonPrevious.setVisibility(View.GONE);
             mLayoutScore.setVisibility(View.GONE);
             mLayoutScore2.setVisibility(View.VISIBLE);
+            mImageAgain.setVisibility(View.VISIBLE);
             mTextViewScore2.setText(String.valueOf(mScore));
         } else {
             mLayoutQuestion.setVisibility(View.VISIBLE);
@@ -278,6 +274,7 @@ public class QuizActivity extends AppCompatActivity {
             mImageButtonPrevious.setVisibility(View.VISIBLE);
             mLayoutScore2.setVisibility(View.GONE);
             mLayoutScore.setVisibility(View.VISIBLE);
+            mImageAgain.setVisibility(View.GONE);
         }
     }
 
@@ -297,7 +294,7 @@ public class QuizActivity extends AppCompatActivity {
         mTextViewScore.setText(String.valueOf(mScore));
     }
 
-    private  void updateSetting(){
+    private void updateSetting() {
         mTextViewQuestion.setTextSize(TypedValue.COMPLEX_UNIT_SP, mSetting.getQuestionSize());
     }
 
@@ -310,8 +307,8 @@ public class QuizActivity extends AppCompatActivity {
                 mQuestionBank[mCurrentIndex].setmAnswered(true);
                 mAnsweredNumber++;
                 updateEnable();
-                updateVisibility();
                 goToNext();
+                updateVisibility();
             }
         });
 
@@ -322,8 +319,8 @@ public class QuizActivity extends AppCompatActivity {
                 mQuestionBank[mCurrentIndex].setmAnswered(true);
                 mAnsweredNumber++;
                 updateEnable();
-                updateVisibility();
                 goToNext();
+                updateVisibility();
             }
         });
 
@@ -362,26 +359,43 @@ public class QuizActivity extends AppCompatActivity {
         mImageAgain.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                mIsFinished=false;
                 mAnsweredNumber = 0;
                 mCurrentIndex = 0;
                 mScore = 0;
                 for (int i = 0; i < mQuestionBank.length; i++) {
                     mQuestionBank[i].setmAnswered(false);
                 }
+                mTimeOut = mQuiz.getmTimeOut();
                 updateVisibility();
                 updateEnable();
                 updateQuestion();
                 updateScore();
+                startTimer(mTimeOut);
             }
         });
 
         mImageButtonSetting.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(QuizActivity.this,SettingActivity.class);
+                Intent intent = new Intent(QuizActivity.this, SettingActivity.class);
                 mSetting = new Setting((int) mTextViewQuestion.getTextSize());//
                 intent.putExtra(KEY_SETTING, mSetting);
                 startActivityForResult(intent, REQUEST_CODE_SETTING);
+            }
+        });
+
+        mButtonCheat.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mQuestionBank[mCurrentIndex].ismIsCheat()) {
+                    Intent intent = new Intent(QuizActivity.this, CheatActivity.class);
+                    intent.putExtra(KEY_CHEAT_Question, mQuestionBank[mCurrentIndex].getmText());
+                    intent.putExtra(KEY_CHEAT_ANSWER, mQuestionBank[mCurrentIndex].ismAnswerTrue());
+                    startActivityForResult(intent, REQUEST_CODE_CHEAT);
+                } else {
+                    Toast.makeText(QuizActivity.this, R.string.toast_disable_cheating, Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -392,8 +406,10 @@ public class QuizActivity extends AppCompatActivity {
         if (userPressed == isAnswerTrue) {
             mScore++;
             updateScore();
-            //Toast.makeText(this, R.string.toast_correct, Toast.LENGTH_LONG).show();
-            //Toast.makeText(this, R.string.toast_incorrect, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.toast_correct, Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, R.string.toast_incorrect, Toast.LENGTH_SHORT).show();
+
         }
     }
 }
