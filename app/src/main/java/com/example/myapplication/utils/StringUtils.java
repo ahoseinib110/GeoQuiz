@@ -61,13 +61,10 @@ public class StringUtils {
             questions.add(question);
 
         }
-        questionsArray = new Question[questions.size()];
-        for (int i = 0; i < questions.size(); i++) {
-            questionsArray[i] = questions.get(i);
-        }
+
 
 
         //questionsArray = (Question[]) questions.toArray();
-        return new Quiz(questionsArray,timeOut);
+        return new Quiz(questions,timeOut);
     }
 }

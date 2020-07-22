@@ -9,6 +9,12 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.myapplication.R;
+import com.example.myapplication.model.Question;
+import com.example.myapplication.model.Quiz;
+import com.example.myapplication.repository.QuestionRepository;
+import com.example.myapplication.utils.StringUtils;
+
+import java.util.List;
 
 public class QuizBuilderActivity extends AppCompatActivity {
     public static final String QUIZ_ATTRIBUTES = "com.example.myapplication.attributes";
@@ -35,10 +41,14 @@ public class QuizBuilderActivity extends AppCompatActivity {
         mButtonBuild.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(QuizBuilderActivity.this, QuizActivity.class);
+                //Intent intent = new Intent(QuizBuilderActivity.this, QuizActivity.class);
+                Intent intent = new Intent(QuizBuilderActivity.this, QuizListActivity.class);
                 String extra = String.valueOf(mEditTextQuizAttributes.getText());
                 //Toast.makeText(QuizBuilderActivity.this, extra ,Toast.LENGTH_SHORT).show();
-                intent.putExtra(QUIZ_ATTRIBUTES, extra);
+                Quiz quiz = StringUtils.parseQuestions(extra);
+                List<Question> questionBank = quiz.getmQuestions();
+                saveToRepository(questionBank);
+                //intent.putExtra(QUIZ_ATTRIBUTES, extra);
                 startActivity(intent);
             }
         });
@@ -50,10 +60,33 @@ public class QuizBuilderActivity extends AppCompatActivity {
                         "[{\"Tehran is in iran\"}, {true}, {false}, {green}],\n" +
                         "[{\"Iran language is english\"}, {false} {true}, {red}], \n" +
                         "[{\"England is in usa\"}, {false}, {false}, {black}]\n" +
+                        "[{\"Tehran is in iran\"}, {true}, {false}, {green}],\n" +
+                        "[{\"Iran language is english\"}, {false} {true}, {red}], \n" +
+                        "[{\"England is in usa\"}, {false}, {false}, {black}]\n" +
+                        "[{\"Tehran is in iran\"}, {true}, {false}, {green}],\n" +
+                        "[{\"Iran language is english\"}, {false} {true}, {red}], \n" +
+                        "[{\"England is in usa\"}, {false}, {false}, {black}]\n" +
+                        "[{\"Tehran is in iran\"}, {true}, {false}, {green}],\n" +
+                        "[{\"Iran language is english\"}, {false} {true}, {red}], \n" +
+                        "[{\"England is in usa\"}, {false}, {false}, {black}]\n" +
+                        "[{\"Tehran is in iran\"}, {true}, {false}, {green}],\n" +
+                        "[{\"Iran language is english\"}, {false} {true}, {red}], \n" +
+                        "[{\"England is in usa\"}, {false}, {false}, {black}]\n" +
+                        "[{\"Tehran is in iran\"}, {true}, {false}, {green}],\n" +
+                        "[{\"Iran language is english\"}, {false} {true}, {red}], \n" +
+                        "[{\"England is in usa\"}, {false}, {false}, {black}]\n" +
+                        "[{\"Tehran is in iran\"}, {true}, {false}, {green}],\n" +
+                        "[{\"Iran language is english\"}, {false} {true}, {red}], \n" +
                         "} , \n" +
                         "{30}\n";
                 mEditTextQuizAttributes.setText(attributes);
             }
         });
     }
+
+    private void saveToRepository(List<Question> questionBank) {
+        QuestionRepository questionRepository = QuestionRepository.getInstance();
+        questionRepository.setQuestions(questionBank);
+    }
+
 }

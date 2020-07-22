@@ -1,19 +1,21 @@
 package com.example.myapplication.model;
 
+import java.util.List;
+
 public class Quiz {
-    private Question[] mQuestions;
+    private List<Question> mQuestions;
     private int mTimeOut;
 
-    public Quiz(Question[] mQuestions, int mTimeOut) {
+    public Quiz(List<Question> mQuestions, int mTimeOut) {
         this.mQuestions = mQuestions;
         this.mTimeOut = mTimeOut;
     }
 
-    public Question[] getmQuestions() {
+    public List<Question> getmQuestions() {
         return mQuestions;
     }
 
-    public void setmQuestions(Question[] mQuestions) {
+    public void setmQuestions(List<Question> mQuestions) {
         this.mQuestions = mQuestions;
     }
 

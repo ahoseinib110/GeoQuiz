@@ -86,7 +86,7 @@ public class QuizActivity extends AppCompatActivity {
         String attributes = intent.getStringExtra(QuizBuilderActivity.QUIZ_ATTRIBUTES);
         Log.d(LOG, attributes);
         mQuiz = StringUtils.parseQuestions(attributes);
-        mQuestionBank = mQuiz.getmQuestions();
+        /////////mQuestionBank = mQuiz.getmQuestions();*****************************************
         mTimeOut = mQuiz.getmTimeOut();
 
         answeredArray = new boolean[mQuestionBank.length];
